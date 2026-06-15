@@ -15,7 +15,7 @@ using PQItem = pair<int, Cell>;
 using MinPQ  = priority_queue<PQItem, vector<PQItem>, greater<PQItem>>;
 
 vector<Cell> solve(vector<vector<char>>& grid, Cell start, Cell goal){
-  vector<Cell> visited;  // list of visited cells (ordered) — return this
+  vector<Cell> visited;
 
     map<Cell, int>  g_fwd,  g_bwd;
     map<Cell, Cell> par_fwd, par_bwd;
@@ -120,8 +120,8 @@ vector<Cell> solve(vector<vector<char>>& grid, Cell start, Cell goal){
         {
             Cell cur = meet;
             while (par_bwd.count(cur)) {
-                Cell par = par_bwd[cur];   // par lebih dekat ke goal
-                came_from[par] = cur;      // untuk sampai ke par, datang dari cur
+                Cell par = par_bwd[cur];
+                came_from[par] = cur;
                 cur = par;
             }
         }
