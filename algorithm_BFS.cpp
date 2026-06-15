@@ -3,7 +3,7 @@
 #include <set>
 
 vector<Cell> solve(vector<vector<char>>& grid, Cell start, Cell goal) {
-    vector<Cell> visited;  // urutan sel yang dikunjungi — wajib direturn
+    vector<Cell> visited;
 
     const int DR[] = {-1, 1, 0, 0};
     const int DC[] = { 0, 0,-1, 1};
