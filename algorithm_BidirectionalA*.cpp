@@ -17,8 +17,6 @@ using MinPQ  = priority_queue<PQItem, vector<PQItem>, greater<PQItem>>;
 vector<Cell> solve(vector<vector<char>>& grid, Cell start, Cell goal){
   vector<Cell> visited;  // list of visited cells (ordered) — return this
 
-  // ===================== WRITE YOUR ALGORITHM HERE =====================
-
     map<Cell, int>  g_fwd,  g_bwd;
     map<Cell, Cell> par_fwd, par_bwd;
     map<Cell, bool> closed_fwd, closed_bwd;
@@ -128,8 +126,5 @@ vector<Cell> solve(vector<vector<char>>& grid, Cell start, Cell goal){
             }
         }
     }
-
-
-  // =========================================================================
     return visited;
 }
