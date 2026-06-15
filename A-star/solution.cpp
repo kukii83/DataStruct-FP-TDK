@@ -1,3 +1,14 @@
+// solution.cpp — THIS IS WHAT YOU WILL WORK ON.
+//
+// Write your algorithm ONLY inside the solve() function below.
+// Do not add other functions. Do not modify harness.h.
+//
+// Compile: g++ -O2 -std=c++17 solution.cpp -o solution
+// Run:     ./solution ../maps/soal1.txt output.txt
+//          ./solution ../maps/soal2.txt output.txt
+//          ./solution ../maps/soal3.txt output.txt
+// View:    open engine/index.html, select the question/map, drag output.txt, click Play/Run.
+
 #include "harness.h"
 #include <queue>
 #include <map>
