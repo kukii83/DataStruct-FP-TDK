@@ -11,7 +11,7 @@
 
 #include "harness.h"
 #include <queue>
-#include <set>
+#include <map>
 #include <climits>
 #include <cmath>
 
@@ -26,116 +26,152 @@ using PQItem = pair<int, Cell>;
 using MinPQ  = priority_queue<PQItem, vector<PQItem>, greater<PQItem>>;
 
 vector<Cell> solve(vector<vector<char>>& grid, Cell start, Cell goal){
-  vector<Cell> visited;
+    vector<Cell> visited;
 
-    map<Cell, int>  g_fwd,  g_bwd;
-    map<Cell, Cell> par_fwd, par_bwd;
-    map<Cell, bool> closed_fwd, closed_bwd;
+    map<Cell,int> g_fwd, g_bwd;
+    map<Cell,Cell> par_fwd, par_bwd;
+    map<Cell,bool> closed_fwd, closed_bwd;
+
     MinPQ open_fwd, open_bwd;
+
     g_fwd[start] = 0;
-
-    open_fwd.push({ max(h(start,goal), 0), start });
-
     g_bwd[goal] = 0;
-    open_bwd.push({ max(h(goal,start), 0), goal });
 
-    int best = INT_MAX;
-    Cell meet = {-1, -1};
+    open_fwd.push({h(start, goal), start});
+    open_bwd.push({h(goal, start), goal});
 
-    auto priority_mm = [&](Cell n, int gn, Cell target) -> int {
-        return max(gn + h(n, target), 2 * gn);
-    };
+    int bestCost = INT_MAX;
+    Cell meet = {-1,-1};
 
-    auto expand_one = [&](
-        MinPQ&          open,
-        map<Cell,int>&  g_mine,
-        map<Cell,Cell>& par_mine,
-        map<Cell,bool>& closed_mine,
-        map<Cell,int>&  g_other,
-        map<Cell,bool>& closed_other,
-        Cell            my_origin,
-        Cell            my_target
-    ) -> bool {
-        if (open.empty()) return false;
+    while (!open_fwd.empty() && !open_bwd.empty()) {
 
-        auto [p, cur] = open.top();
-        open.pop();
+        int fwdTop = open_fwd.top().first;
+        int bwdTop = open_bwd.top().first;
 
-        if (closed_mine[cur]) return false;
-        closed_mine[cur] = true;
-        visited.push_back(cur);
+        if (bestCost != INT_MAX &&
+            fwdTop + bwdTop >= bestCost)
+            break;
 
-        if (g_other.count(cur)) {
-            int candidate = g_mine[cur] + g_other[cur];
-            if (candidate < best) {
-                best = candidate;
-                meet = cur;
-            }
-        }
+        // ---------- FORWARD ----------
+        if (!open_fwd.empty()) {
 
-        for (int d = 0; d < 4; d++) {
-            int nr = cur.first  + DR[d];
-            int nc = cur.second + DC[d];
-            if (!inBounds(nr, nc) || isWall(grid[nr][nc])) continue;
+            auto [f, cur] = open_fwd.top();
+            open_fwd.pop();
 
-            Cell nb = {nr, nc};
-            if (closed_mine[nb]) continue;
+            if (!closed_fwd[cur]) {
 
-            int new_g = g_mine[cur] + cellCost(grid[nr][nc]);
+                closed_fwd[cur] = true;
+                visited.push_back(cur);
 
-            if (!g_mine.count(nb) || new_g < g_mine[nb]) {
-                g_mine[nb]  = new_g;
-                par_mine[nb] = cur;
-                int p_nb = priority_mm(nb, new_g, my_target);
-                open.push({p_nb, nb});
+                if (g_bwd.count(cur)) {
+                    int candidate =
+                        g_fwd[cur] + g_bwd[cur];
 
-                if (g_other.count(nb)) {
-                    int candidate = new_g + g_other[nb];
-                    if (candidate < best) {
-                        best = candidate;
-                        meet = nb;
+                    if (candidate < bestCost) {
+                        bestCost = candidate;
+                        meet = cur;
+                    }
+                }
+
+                for (int d = 0; d < 4; d++) {
+
+                    int nr = cur.first + DR[d];
+                    int nc = cur.second + DC[d];
+
+                    if (!inBounds(nr,nc) ||
+                        isWall(grid[nr][nc]))
+                        continue;
+
+                    Cell nb = {nr,nc};
+
+                    int newG =
+                        g_fwd[cur] +
+                        cellCost(grid[nr][nc]);
+
+                    if (!g_fwd.count(nb) ||
+                        newG < g_fwd[nb]) {
+
+                        g_fwd[nb] = newG;
+                        par_fwd[nb] = cur;
+
+                        int fScore =
+                            newG + h(nb, goal);
+
+                        open_fwd.push({fScore, nb});
                     }
                 }
             }
         }
-        return true;
-    };
 
-    while (!open_fwd.empty() || !open_bwd.empty()) {
+        // ---------- BACKWARD ----------
+        if (!open_bwd.empty()) {
 
-        int top_fwd = open_fwd.empty() ? INT_MAX : open_fwd.top().first;
-        int top_bwd = open_bwd.empty() ? INT_MAX : open_bwd.top().first;
-        int top_min = min(top_fwd, top_bwd);
+            auto [f, cur] = open_bwd.top();
+            open_bwd.pop();
 
-        if (best != INT_MAX && top_min >= best) break;
+            if (!closed_bwd[cur]) {
 
-        if (top_fwd <= top_bwd) {
-            expand_one(open_fwd, g_fwd, par_fwd, closed_fwd,
-                    g_bwd, closed_bwd, start, goal);
-        } else {
-            expand_one(open_bwd, g_bwd, par_bwd, closed_bwd,
-                    g_fwd, closed_fwd, goal, start);
+                closed_bwd[cur] = true;
+                visited.push_back(cur);
+
+                if (g_fwd.count(cur)) {
+                    int candidate =
+                        g_fwd[cur] + g_bwd[cur];
+
+                    if (candidate < bestCost) {
+                        bestCost = candidate;
+                        meet = cur;
+                    }
+                }
+
+                for (int d = 0; d < 4; d++) {
+
+                    int nr = cur.first + DR[d];
+                    int nc = cur.second + DC[d];
+
+                    if (!inBounds(nr,nc) ||
+                        isWall(grid[nr][nc]))
+                        continue;
+
+                    Cell nb = {nr,nc};
+
+                    int newG =
+                        g_bwd[cur] +
+                        cellCost(grid[nr][nc]);
+
+                    if (!g_bwd.count(nb) ||
+                        newG < g_bwd[nb]) {
+
+                        g_bwd[nb] = newG;
+                        par_bwd[nb] = cur;
+
+                        int fScore =
+                            newG + h(nb, start);
+
+                        open_bwd.push({fScore, nb});
+                    }
+                }
+            }
         }
     }
 
     if (meet.first != -1) {
-        {
-            Cell cur = meet;
-            while (par_fwd.count(cur)) {
-                Cell par = par_fwd[cur];
-                came_from[cur] = par;
-                cur = par;
-            }
+
+        Cell cur = meet;
+
+        while (par_fwd.count(cur)) {
+            came_from[cur] = par_fwd[cur];
+            cur = par_fwd[cur];
         }
 
-        {
-            Cell cur = meet;
-            while (par_bwd.count(cur)) {
-                Cell par = par_bwd[cur];
-                came_from[par] = cur;
-                cur = par;
-            }
+        cur = meet;
+
+        while (par_bwd.count(cur)) {
+            Cell nxt = par_bwd[cur];
+            came_from[nxt] = cur;
+            cur = nxt;
         }
     }
+
     return visited;
 }
